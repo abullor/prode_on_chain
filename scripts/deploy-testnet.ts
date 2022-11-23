@@ -1,10 +1,8 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const [owner] = await ethers.getSigners();
-
   const MultiSig = await ethers.getContractFactory("MultiSig");
-  const multiSig = await MultiSig.deploy([owner.address], 1);
+  const multiSig = await MultiSig.deploy([process.env.MULTISIG_OWNER_ADDRESS], 1);
 
   await multiSig.deployed();
 

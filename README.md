@@ -59,7 +59,7 @@ Despliegue en nodo local
 npx hardhat node
 npx hardhat run --network localhost scripts/deploy-local.ts
 ```
-Despliegue en testnet
+Despliegue en testnet (en este script de ejemplo se settea un único signer al MultiSig)
 ```shell
-ALCHEMY_API_KEY= GOERLI_PRIVATE_KEY= ETHERSCAN_API_KEY= npx hardhat run --network goerli scripts/deploy-testnet.ts
+MULTISIG_OWNER_ADDRESS= ALCHEMY_API_KEY= GOERLI_PRIVATE_KEY= ETHERSCAN_API_KEY= npx hardhat run --network goerli scripts/deploy-testnet.ts
 ```
