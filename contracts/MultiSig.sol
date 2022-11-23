@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+/// @title MultiSig implementation to limit the operations in ProdeLogic.
+/// @author Ariel Bullor
 contract MultiSig {
     struct Txn {
         address to;
@@ -51,6 +53,7 @@ contract MultiSig {
         required = _required;
     }
 
+    /// @notice Submits a transaction for later execution.
     function submit(address _to, bytes calldata _data) external onlyOwner returns(uint256) {
         txns.push(Txn({
             to: _to,
@@ -61,10 +64,12 @@ contract MultiSig {
         return txns.length - 1;
     }
 
+    /// @notice Approves a transaction that should exist if it's not executed nor approved.
     function approve(uint256 _txnId) external onlyOwner txnExists(_txnId) notExecuted(_txnId) notApproved(_txnId) {
         approved[_txnId][msg.sender] = true;
     }
 
+    /// @notice Returns the number of approvals for a given transaction id.
     function getApprovalCount(uint256 _txnId) private view returns (uint256 count) {
         uint256 ownersLength = owners.length;
 
@@ -77,6 +82,7 @@ contract MultiSig {
         }
     }
 
+    /// @notice Executes a transaction if it has the required approvals and it hasn't been already executed.
     function execute(uint256 _txnId) external txnExists(_txnId) notExecuted(_txnId) {
         require(getApprovalCount(_txnId) >= required, "Not enough approvals");
 

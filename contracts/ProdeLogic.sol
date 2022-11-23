@@ -5,6 +5,8 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ProdeToken.sol";
 
+/// @title Prode logic to handle bets, points and prize.
+/// @author Ariel Bullor
 contract ProdeLogic is Ownable {
     struct Match {
         uint8 home;
@@ -186,6 +188,8 @@ contract ProdeLogic is Ownable {
         fixture[47] = Match(25, 26, 0, 1670007600); // Serbia - Switzerland - 02-12-2022 19:00:00 GMT-0
     }
 
+    /// @notice Receives and validates the value and the bet, minting a NFT if the invocation is correct.
+    /// @dev Returns NFT id.
     function bet(uint96 _bet) external betChecks(_bet) payable returns (uint256) {
         uint256 nftId = prodeToken.mintBet(msg.sender, _bet);
 
@@ -198,30 +202,39 @@ contract ProdeLogic is Ownable {
         return nftId;
     }
 
+    /// @notice Returns the contract balance.
     function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
+    /// @notice Returns the accumulated prize.
     function getPrize() public view returns (uint256) {
         return prize;
     }
 
+    /// @notice Returns the number of matches that have been already processed.
+    /// @dev If the value is equals to TOTAL_GAMES, it means all the process is completed.
     function getMatchesProcessed() external view returns (uint8) {
         return matchesProcessed;
     }
 
+    /// @notice Returns the points for a given NFT id.
     function getPointsForToken(uint256 _nftId) external view returns (uint8) {
         return pointsByToken[_nftId];
     }
 
+    /// @notice Returns the list of winner NFTs.
     function getWinnerTokens() external view isProcessCompleted returns (uint256[] memory) {
         return winnerTokens;
     }
 
+    /// @notice Returns the prize for each winner.
+    /// @dev The value comes from diving the accumulated prize between all the winners.
     function getPrizeForWinners() external view isProcessCompleted returns (uint256) {
         return prizeForWinners;
     }
 
+    /// @notice Validates that all the matches have a prediction.
     function isValidBet(uint96 _bet) private pure returns(bool) {
         for (uint8 i = 0; i < TOTAL_GAMES; i++) {
             uint8 firstIndex = i * 2;
@@ -237,6 +250,8 @@ contract ProdeLogic is Ownable {
         return true;
     }
 
+    /// @notice Stores a score after validating it.
+    /// @dev Emits a MatchScoreStoredEvent event in case the validation is passed.
     function setMatchScore(uint8 _matchId, uint8 _score) external onlyOwner scoreChecks(_matchId, _score) {
         fixture[_matchId].score = _score;
 
@@ -247,6 +262,8 @@ contract ProdeLogic is Ownable {
         emit MatchScoreStoredEvent(msg.sender, _matchId, _score);
     }
 
+    /// @notice Calculates the points for all the participants in case the required conditions are validated.
+    /// @dev Emits a PointsCalculatedEvent event if the process is finished.
     function calculatePoints() external onlyOwner {
         require(matchesProcessed == TOTAL_GAMES, "There are still pending scores");
 
@@ -266,6 +283,7 @@ contract ProdeLogic is Ownable {
         emit PointsCalculatedEvent(msg.sender, winnerTokens.length);
     }
 
+    /// @notice Calculates the points for a specific NFT.
     function calculatePointsForToken(uint256 _nftId) private {
         uint96 storedBet = prodeToken.getBet(_nftId);
 
@@ -279,10 +297,10 @@ contract ProdeLogic is Ownable {
 
             uint8 result = fixture[i].score;
 
-            if (result != SUSPENDED &&
-                ((result == HOME && !bit1 && bit2)
-                    || (result == TIE && bit1 && !bit2)
-                    || (result == VISITOR && bit1 && bit2))) {
+            if (result != SUSPENDED && // Is not suspended AND
+                ((result == HOME && !bit1 && bit2) // Is HOME assertion
+                    || (result == TIE && bit1 && !bit2) // Or is TIE assertion
+                    || (result == VISITOR && bit1 && bit2))) { // Or is VISITOR assertion
                     ++points;
             }
         }
@@ -294,6 +312,7 @@ contract ProdeLogic is Ownable {
         }
     }
 
+    /// @notice Populates a mapping with all the winners NFTs.
     function setWinners() internal {
         uint256 winnerTokensLength = winnerTokens.length;
 
@@ -304,6 +323,7 @@ contract ProdeLogic is Ownable {
         }
     }
 
+    /// @notice Check the points for a specific NFT, storing the ones with the maximum points.
     function checkPoints(uint256 _nftId, uint8 _points) private {
         if (_points > maxPoints) {
             maxPoints = _points;
@@ -316,6 +336,7 @@ contract ProdeLogic is Ownable {
         }
     }
 
+    /// @notice Withdrawal impl exposed to winners to get their prize.
     function claimPrize(uint256 _nftId) external claimChecks(_nftId) {
         prizeByToken[_nftId].payed = true;
 
@@ -324,6 +345,7 @@ contract ProdeLogic is Ownable {
         emit PrizedClaimedEvent(msg.sender, _nftId, prizeForWinners);
     }
 
+    /// @notice Utility to check if a bit is set inside a uint96.
     function isBitSet(uint96 n, uint8 pos) private pure returns (bool) {
         return ((n >> pos) & 1) == 1;
     }

@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title NFT to store score predictions
+/// @author Ariel Bullor
 contract ProdeToken is ERC721, Ownable {
     using Counters for Counters.Counter;
     
@@ -14,6 +16,8 @@ contract ProdeToken is ERC721, Ownable {
     constructor() ERC721("ProdeToken", "PTO") {
     }
 
+    /// @notice Mints a new NFT storing the bet on chain.
+    /// @dev Returns NFT id.
     function mintBet(address _tokenOwner, uint96 _bet) public onlyOwner returns (uint256) {
         tokenIds.increment();
         uint256 newItemId = tokenIds.current();
@@ -23,7 +27,8 @@ contract ProdeToken is ERC721, Ownable {
 
         return newItemId;
     }
-    
+
+    /// @notice Returns the bet for a given NFT id.
     function getBet(uint256 n) public view returns (uint96) {
         return matches[n];
     }
