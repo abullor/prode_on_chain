@@ -283,7 +283,7 @@ contract ProdeLogic is Ownable {
                 ((result == HOME && !bit1 && bit2)
                     || (result == TIE && bit1 && !bit2)
                     || (result == VISITOR && bit1 && bit2))) {
-                    points++;
+                    ++points;
             }
         }
 
