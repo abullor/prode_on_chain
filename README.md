@@ -34,9 +34,9 @@ interesado en la misma en caso de que su predicción sea candidata a ganar el po
 - Para el cobro de premios se implementa el patrón Withdrawal, siendo los dueños de las boletas quienes retirarán su premio, validándose que efectivamente sean ganadores, que sean los dueños de la boleta, y que la misma no haya sido cobrada anteriormente.
 
 ## Eventos a registrar
-- Cada vez que se guarde una apuesta con los datos de el sender, el id de nft y la apuesta en sí.
-- Cada vez que se guarde un resultado con los datos de el sender, el id de partido y el resultado ingresado.
-- El momento en el que se hayan terminado de calcular los puntos con los datos de el sender y la cantidad de ganadores.
+- Cada vez que se guarde una apuesta con los datos del sender, el id de nft y la apuesta en sí.
+- Cada vez que se guarde un resultado con los datos del sender, el id de partido y el resultado ingresado.
+- El momento en el que se hayan terminado de calcular los puntos con los datos del sender y la cantidad de ganadores.
 - Cada vez que se pague un premio con los datos de el destinatario, el id de nft y el monto del premio.
 
 Ejecución de test unitarios
