@@ -19,7 +19,7 @@ describe("ProdeLogic", function () {
     const prodeToken = await ProdeToken.deploy();
 
     const ProdeLogic = await ethers.getContractFactory("ProdeLogic", prodeLogicOwner);
-    const prodeLogic = await ProdeLogic.deploy(prodeToken.address, DUE_DATE + (ONE_DAY * 4)); //20-11-2022 00:00:00 GMT-0 + 3 days
+    const prodeLogic = await ProdeLogic.deploy(prodeToken.address, DUE_DATE + (ONE_DAY * 10)); //20-11-2022 00:00:00 GMT-0 + 3 days
 
     const MultiSig = await ethers.getContractFactory("MultiSig", multiSigOwner);
     const multiSig = await MultiSig.deploy([multiSigOwner1.address], multiSigRequiredSigners);
