@@ -69,22 +69,9 @@ contract MultiSig {
         approved[_txnId][msg.sender] = true;
     }
 
-    /// @notice Returns the number of approvals for a given transaction id.
-    function getApprovalCount(uint256 _txnId) private view returns (uint256 count) {
-        uint256 ownersLength = owners.length;
-
-        for (uint256 i = 0; i < ownersLength; i++) {
-            if (approved[_txnId][owners[i]]) {
-                unchecked {
-                    ++count;
-                }
-            }
-        }
-    }
-
     /// @notice Executes a transaction if it has the required approvals and it hasn't been already executed.
     function execute(uint256 _txnId) external txnExists(_txnId) notExecuted(_txnId) {
-        require(getApprovalCount(_txnId) >= required, "Not enough approvals");
+        require(_getApprovalCount(_txnId) >= required, "Not enough approvals");
 
         Txn storage txn = txns[_txnId];
 
@@ -95,6 +82,19 @@ contract MultiSig {
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
+            }
+        }
+    }
+
+    /// @notice Returns the number of approvals for a given transaction id.
+    function _getApprovalCount(uint256 _txnId) private view returns (uint256 count) {
+        uint256 ownersLength = owners.length;
+
+        for (uint256 i = 0; i < ownersLength; i++) {
+            if (approved[_txnId][owners[i]]) {
+                unchecked {
+                    ++count;
+                }
             }
         }
     }
