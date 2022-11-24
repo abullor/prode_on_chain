@@ -256,7 +256,7 @@ contract ProdeLogic is Ownable {
         fixture[_matchId].score = _score;
 
         unchecked {
-            matchesProcessed++;
+            ++matchesProcessed;
         }
 
         emit MatchScoreStoredEvent(msg.sender, _matchId, _score);
