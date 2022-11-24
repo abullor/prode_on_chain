@@ -18,7 +18,7 @@ contract ProdeToken is ERC721, Ownable {
 
     /// @notice Mints a new NFT storing the bet on chain.
     /// @dev Returns NFT id.
-    function mintBet(address _tokenOwner, uint96 _bet) public onlyOwner returns (uint256) {
+    function mintBet(address _tokenOwner, uint96 _bet) external onlyOwner returns (uint256) {
         tokenIds.increment();
         uint256 newItemId = tokenIds.current();
         matches[newItemId] = _bet;
@@ -29,7 +29,7 @@ contract ProdeToken is ERC721, Ownable {
     }
 
     /// @notice Returns the bet for a given NFT id.
-    function getBet(uint256 n) public view returns (uint96) {
+    function getBet(uint256 n) external view returns (uint96) {
         return matches[n];
     }
 }
