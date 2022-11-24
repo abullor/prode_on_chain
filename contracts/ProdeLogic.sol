@@ -234,22 +234,6 @@ contract ProdeLogic is Ownable {
         return prizeForWinners;
     }
 
-    /// @notice Validates that all the matches have a prediction.
-    function isValidBet(uint96 _bet) private pure returns(bool) {
-        for (uint8 i = 0; i < TOTAL_GAMES; i++) {
-            uint8 firstIndex = i * 2;
-
-            bool bit1 = isBitSet(_bet, firstIndex);
-            bool bit2 = isBitSet(_bet, firstIndex + 1);
-
-            if (!bit1 && !bit2) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /// @notice Stores a score after validating it.
     /// @dev Emits a MatchScoreStoredEvent event in case the validation is passed.
     function setMatchScore(uint8 _matchId, uint8 _score) external onlyOwner scoreChecks(_matchId, _score) {
@@ -271,69 +255,16 @@ contract ProdeLogic is Ownable {
         uint256[] memory _tokens = tokens;
 
         for (uint256 i = 0; i < tokensLength; i++) {
-            calculatePointsForToken(_tokens[i]);
+            _calculatePointsForToken(_tokens[i]);
         }
 
         if (winnerTokens.length > 0) {
-            setWinners();
+            _setWinners();
         }
 
         processCompleted = true;
 
         emit PointsCalculatedEvent(msg.sender, winnerTokens.length);
-    }
-
-    /// @notice Calculates the points for a specific NFT.
-    function calculatePointsForToken(uint256 _nftId) private {
-        uint96 storedBet = prodeToken.getBet(_nftId);
-
-        uint8 points;
-
-        for (uint8 i = 0; i < TOTAL_GAMES; i++) {
-            uint8 firstIndex = i * 2;
-
-            bool bit1 = isBitSet(storedBet, firstIndex);
-            bool bit2 = isBitSet(storedBet, firstIndex + 1);
-
-            uint8 result = fixture[i].score;
-
-            if (result != SUSPENDED && // Is not suspended AND
-                ((result == HOME && !bit1 && bit2) // Is HOME assertion
-                    || (result == TIE && bit1 && !bit2) // Or is TIE assertion
-                    || (result == VISITOR && bit1 && bit2))) { // Or is VISITOR assertion
-                    ++points;
-            }
-        }
-
-        pointsByToken[_nftId] = points;
-
-        if (points > 0) {
-            checkPoints(_nftId, points);
-        }
-    }
-
-    /// @notice Populates a mapping with all the winners NFTs.
-    function setWinners() internal {
-        uint256 winnerTokensLength = winnerTokens.length;
-
-        prizeForWinners = winnerTokensLength == 1 ? getPrize() : getPrize() / winnerTokensLength;
-
-        for (uint256 i = 0; i < winnerTokensLength; i++) {
-            prizeByToken[winnerTokens[i]] = Winner(true, false);
-        }
-    }
-
-    /// @notice Check the points for a specific NFT, storing the ones with the maximum points.
-    function checkPoints(uint256 _nftId, uint8 _points) private {
-        if (_points > maxPoints) {
-            maxPoints = _points;
-
-            delete winnerTokens;
-
-            winnerTokens.push(_nftId);
-        } else if (_points == maxPoints) {
-            winnerTokens.push(_nftId);
-        }
     }
 
     /// @notice Withdrawal impl exposed to winners to get their prize.
@@ -345,8 +276,77 @@ contract ProdeLogic is Ownable {
         emit PrizedClaimedEvent(msg.sender, _nftId, prizeForWinners);
     }
 
+    /// @notice Validates that all the matches have a prediction.
+    function _isValidBet(uint96 _bet) private pure returns(bool) {
+        for (uint8 i = 0; i < TOTAL_GAMES; i++) {
+            uint8 firstIndex = i * 2;
+
+            bool bit1 = _isBitSet(_bet, firstIndex);
+            bool bit2 = _isBitSet(_bet, firstIndex + 1);
+
+            if (!bit1 && !bit2) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// @notice Calculates the points for a specific NFT.
+    function _calculatePointsForToken(uint256 _nftId) private {
+        uint96 storedBet = prodeToken.getBet(_nftId);
+
+        uint8 points;
+
+        for (uint8 i = 0; i < TOTAL_GAMES; i++) {
+            uint8 firstIndex = i * 2;
+
+            bool bit1 = _isBitSet(storedBet, firstIndex);
+            bool bit2 = _isBitSet(storedBet, firstIndex + 1);
+
+            uint8 result = fixture[i].score;
+
+            if (result != SUSPENDED && // Is not suspended AND
+                ((result == HOME && !bit1 && bit2) // Is HOME assertion
+                || (result == TIE && bit1 && !bit2) // Or is TIE assertion
+                || (result == VISITOR && bit1 && bit2))) { // Or is VISITOR assertion
+                ++points;
+            }
+        }
+
+        pointsByToken[_nftId] = points;
+
+        if (points > 0) {
+            _checkPoints(_nftId, points);
+        }
+    }
+
+    /// @notice Populates a mapping with all the winners NFTs.
+    function _setWinners() private {
+        uint256 winnerTokensLength = winnerTokens.length;
+
+        prizeForWinners = winnerTokensLength == 1 ? getPrize() : getPrize() / winnerTokensLength;
+
+        for (uint256 i = 0; i < winnerTokensLength; i++) {
+            prizeByToken[winnerTokens[i]] = Winner(true, false);
+        }
+    }
+
+    /// @notice Check the points for a specific NFT, storing the ones with the maximum points.
+    function _checkPoints(uint256 _nftId, uint8 _points) private {
+        if (_points > maxPoints) {
+            maxPoints = _points;
+
+            delete winnerTokens;
+
+            winnerTokens.push(_nftId);
+        } else if (_points == maxPoints) {
+            winnerTokens.push(_nftId);
+        }
+    }
+
     /// @notice Utility to check if a bit is set inside a uint96.
-    function isBitSet(uint96 n, uint8 pos) private pure returns (bool) {
+    function _isBitSet(uint96 n, uint8 pos) private pure returns (bool) {
         return ((n >> pos) & 1) == 1;
     }
 
@@ -358,7 +358,7 @@ contract ProdeLogic is Ownable {
     function _betChecks(uint96 _bet) private view {
         require(block.timestamp < dateLimit, "Date limit is already due");
         require(msg.value == TICKET_PRICE, "Invalid price");
-        require(isValidBet(_bet), "There are matches without score");
+        require(_isValidBet(_bet), "There are matches without score");
     }
 
     function _scoreChecks(uint8 _matchId, uint8 _score) private view {
